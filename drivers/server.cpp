@@ -1,17 +1,23 @@
-#pragma once
-
 #include <ufan/common/interrupts.hpp>
-#include <ufan/common/logging.hpp>
 #include <ufan/common/socket.hpp>
 #include <ufan/protocol/message.hpp>
+
+#include <quill/Backend.h>
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
+#include <quill/sinks/ConsoleSink.h>
+#include <quill/sinks/FileSink.h>
 
 #include <chrono>
 #include <cstddef>
 #include <flat_map>
+#include <optional>
+#include <string>
 
 namespace ufan {
 
-class Server : common::ClassLogger {
+class Server {
   private:
     struct ClientData {
         protocol::Topic topic{};
@@ -19,6 +25,11 @@ class Server : common::ClassLogger {
 
         ClientData() { std::memset(topic.keys, 0, sizeof(topic.keys)); }
     };
+
+    quill::Logger* m_logger;
+
+    quill::Logger* logger() { return m_logger; }
+    const quill::Logger* logger() const { return m_logger; }
 
     common::Endpoint m_endpoint;
     common::Socket m_socket;
@@ -129,7 +140,10 @@ class Server : common::ClassLogger {
 
   public:
     Server(common::Endpoint endpoint)
-        : common::ClassLogger("server"), m_endpoint(endpoint),
+        : m_logger(quill::Frontend::create_or_get_logger(
+              "server", quill::Frontend::create_or_get_sink<quill::ConsoleSink>(
+                            "default"))),
+          m_endpoint(endpoint),
           m_socket(common::Socket::open(/*non_blocking=*/true)) {
         m_socket.bind(m_endpoint);
         m_recv_buf.resize(65535);
@@ -143,3 +157,9 @@ class Server : common::ClassLogger {
 };
 
 } // namespace ufan
+
+int main() {
+    quill::Backend::start();
+    ufan::Server(ufan::common::Endpoint::ip("0.0.0.0", 42069)).run();
+    return 0;
+}

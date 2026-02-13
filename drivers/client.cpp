@@ -1,6 +1,5 @@
 #include <ufan/client.hpp>
 #include <ufan/common/interrupts.hpp>
-#include <ufan/common/logging.hpp>
 #include <ufan/common/socket.hpp>
 #include <ufan/protocol/message.hpp>
 
@@ -8,11 +7,7 @@
 #include <iostream>
 
 int main() {
-    ufan::common::init_logging();
-
     auto server = ufan::common::Endpoint::ip("127.0.0.1", 42069);
-
-    auto logger = ufan::common::create_logger("client");
 
     auto topic_publish = ufan::protocol::Topic::from_string("a.b.f.a.c.e.g.h");
     auto topic_subscribe = ufan::protocol::Topic::from_string("a.b.>");
@@ -46,8 +41,8 @@ int main() {
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::system_clock::now().time_since_epoch())
                     .count();
-            LOG_INFO(logger, "recv {} latency={}", time,
-                     static_cast<double>(recv_time - time) * 0.001);
+            std::cout << (static_cast<double>(recv_time - time) * 0.001)
+                      << std::endl;
         }
     });
     return 0;
