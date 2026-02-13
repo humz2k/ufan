@@ -39,3 +39,8 @@
 
 # debug information files
 *.dwo
+
+.vscode
+.DS_Store
+build
+CMakeUserPresets.json
