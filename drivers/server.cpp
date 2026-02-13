@@ -60,6 +60,10 @@ class Server {
 
     void handle_heartbeat(const common::Endpoint& endpoint,
                           std::span<const std::byte> data) {
+        if (m_clients.find(endpoint) == m_clients.end()) {
+            LOG_INFO(this->logger(), "[{}] connected", endpoint.id());
+        }
+
         auto& client_data = m_clients[endpoint];
         client_data.last_heartbeat =
             protocol::MessageParser::header(data).timestamp();
@@ -77,8 +81,23 @@ class Server {
 
     void handle_subscribe(const common::Endpoint& endpoint,
                           std::span<const std::byte> data) {
-        m_clients[endpoint].topic =
-            protocol::MessageParser::header(data).topic();
+        if (m_clients.find(endpoint) == m_clients.end()) {
+            LOG_INFO(this->logger(), "[{}] connected", endpoint.id());
+        }
+        auto topic = protocol::MessageParser::header(data).topic();
+
+        LOG_INFO(this->logger(), "[{}] subscribed to {}.{}.{}.{}.{}.{}.{}.{}",
+                 endpoint.id(), topic.keys[0], topic.keys[1], topic.keys[2],
+                 topic.keys[3], topic.keys[4], topic.keys[5], topic.keys[6],
+                 topic.keys[7]);
+
+        auto& client_data = m_clients[endpoint];
+        client_data.topic = topic;
+        send(endpoint,
+             m_constructor.construct(
+                 protocol::Header::heartbeat(time_now()),
+                 std::span<const std::byte>((std::byte*)&client_data.topic,
+                                            sizeof(client_data.topic))));
     }
 
     void handle_publish(const common::Endpoint& endpoint,
