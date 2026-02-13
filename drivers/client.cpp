@@ -10,10 +10,7 @@
 int main() {
     ufan::common::init_logging();
 
-    // ufan::protocol::MessageConstructor message_constructor;
-
     auto server = ufan::common::Endpoint::ip("127.0.0.1", 42069);
-    // auto socket = ufan::common::Socket::open();
 
     auto logger = ufan::common::create_logger("client");
 
@@ -24,9 +21,6 @@ int main() {
     ufan::Subscriber subscriber(server, topic_subscribe);
 
     int64_t next_send = 0;
-
-    // std::vector<std::byte> recv_buf;
-    // recv_buf.resize(65535);
 
     ufan::common::run_forever([&]() {
         int64_t time_now =
@@ -41,7 +35,7 @@ int main() {
             publisher.publish(
                 topic_publish,
                 std::span<const std::byte>((std::byte*)&time, sizeof(int64_t)));
-            next_send = time_now + 5000;
+            next_send = time_now + 1000;
         }
 
         auto message = subscriber.process<std::span<const std::byte>>();

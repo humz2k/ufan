@@ -41,9 +41,9 @@ class Server : common::ClassLogger {
 
     void send(const common::Endpoint& endpoint,
               std::span<const std::byte> data) {
-        LOG_INFO(this->logger(), "[{}] < ({}) {} bytes", endpoint.id(),
-                 (char)protocol::MessageParser::header(data).type(),
-                 data.size());
+        LOG_DEBUG(this->logger(), "[{}] < ({}) {} bytes", endpoint.id(),
+                  (char)protocol::MessageParser::header(data).type(),
+                  data.size());
         m_socket.send_to(endpoint, data);
     }
 
@@ -106,8 +106,8 @@ class Server : common::ClassLogger {
 
         try {
             auto header = protocol::MessageParser::header(buf);
-            LOG_INFO(this->logger(), "[{}] > ({}) {} bytes", info.from.id(),
-                     (char)header.type(), info.size);
+            LOG_DEBUG(this->logger(), "[{}] > ({}) {} bytes", info.from.id(),
+                      (char)header.type(), info.size);
 
             switch (header.type()) {
             case protocol::MessageType::heartbeat:
